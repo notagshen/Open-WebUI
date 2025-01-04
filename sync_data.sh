@@ -32,10 +32,6 @@ sync_data() {
             # 计算文件编号（0-11，每2小时递增1）（2个小时备份一次）
             FILE_NUMBER=$(($(date +%H) / 2))
             FILENAME="webui_${FILE_NUMBER}.db"
-
-            # 计算文件编号（日期）
-            DATE_STR=$(date +'%m_%d')
-            FILENAME_M_D="webui_${DATE_STR}.db"
             
             echo "同步到 WebDAV..."
 
@@ -43,18 +39,11 @@ sync_data() {
             curl -L -T "./data/webui.db" --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/$FILENAME" && {
                 echo " WebDAV (小时命名) 上传成功: $FILENAME"
                 
-                # 上传以日期命名的数据库文件
-                curl -L -T "./data/webui.db" --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/year_all_month_day_data/$FILENAME_M_D" && {
-                  echo " WebDAV (日期命名) 上传成功: $FILENAME_M_D"
-                  
-                  # 覆盖Webdav目录下默认的webui.db文件（方便下次拉取的时候就是最新版本）
-                  curl -L -T "./data/webui.db" --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/webui.db" && {
-                      echo " WebDAV 更新主文件成功"
-                  } || {
-                      echo " WebDAV 更新主文件失败"
-                  }
+                # 覆盖Webdav目录下默认的webui.db文件（方便下次拉取的时候就是最新版本）
+                curl -L -T "./data/webui.db" --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/webui.db" && {
+                    echo " WebDAV 更新主文件成功"
                 } || {
-                  echo " WebDAV（日期命名） 上传失败"
+                    echo " WebDAV 更新主文件失败"
                 }
             } || {
                 echo " WebDAV（小时命名）上传失败，等待重试..."
