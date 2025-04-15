@@ -9,14 +9,14 @@ generate_sum() {
     sha256sum "$file" > "$sum_file"
 }
 
-# 优先从网页DAV恢复数据
+# 优先从WebDAV恢复数据
 if [ ! -z "$WEBDAV_URL" ] && [ ! -z "$WEBDAV_USERNAME" ] && [ ! -z "$WEBDAV_PASSWORD" ]; then
-    echo "尝试从网页DAV恢复数据..."
+    echo "尝试从WebDAV恢复数据..."
     curl -L --fail --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/webui.db" -o "./data/webui.db" && {
-        echo "从网页DAV恢复数据成功"
+        echo "从WebDAV恢复数据成功"
     } || {
         if [ ! -z "$G_NAME" ] && [ ! -z "$G_TOKEN" ]; then
-            echo "从网页DAV恢复失败,尝试从GitHub恢复..."
+            echo "从WebDAV恢复失败,尝试从GitHub恢复..."
             REPO_URL="https://${G_TOKEN}@github.com/${G_NAME}.git"
             git clone "$REPO_URL" ./data/temp && {
                 if [ -f ./data/temp/webui.db ]; then
@@ -29,11 +29,11 @@ if [ ! -z "$WEBDAV_URL" ] && [ ! -z "$WEBDAV_USERNAME" ] && [ ! -z "$WEBDAV_PASS
                 fi
             }
         else
-            echo "网页DAV恢复失败,且未配置GitHub"
+            echo "WebDAV恢复失败,且未配置GitHub"
         fi
     }
 else
-    echo "未配置网页DAV,跳过数据恢复"
+    echo "未配置WebDAV,跳过数据恢复"
 fi
 
 # 同步函数
@@ -51,15 +51,15 @@ sync_data() {
                 echo "检测到文件变化，开始同步..."
                 mv "./data/webui.db.sha256.new" "./data/webui.db.sha256"
                 
-                # 同步到网页DAV
+                # 同步到WebDAV
                 if [ ! -z "$WEBDAV_URL" ] && [ ! -z "$WEBDAV_USERNAME" ] && [ ! -z "$WEBDAV_PASSWORD" ]; then
-                    echo "同步到网页DAV..."
+                    echo "同步到WebDAV..."
                     
                     # 上传数据文件
                     curl -L -T "./data/webui.db" --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/webui.db" && {
-                        echo "网页DAV更新成功"
+                        echo "WebDAV更新成功"
                         
-                        # 每日备份(包括网页DAV和GitHub)，在每天0点进行
+                        # 每日备份(包括WebDAV和GitHub)，在每天0点进行
                         if [ "$HOUR" = "00" ]; then
                             echo "开始每日备份..."
                             
@@ -67,9 +67,9 @@ sync_data() {
                             YESTERDAY=$(date -d "yesterday" '+%Y%m%d')
                             FILENAME_DAILY="webui_${YESTERDAY}.db"
                             
-                            # 网页DAV每日备份
+                            # WebDAV每日备份
                             curl -L -T "./data/webui.db" --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/$FILENAME_DAILY" && {
-                                echo "网页DAV日期备份成功: $FILENAME_DAILY"
+                                echo "WebDAV日期备份成功: $FILENAME_DAILY"
                                 
                                 # GitHub每日备份
                                 if [ ! -z "$G_NAME" ] && [ ! -z "$G_TOKEN" ]; then
@@ -100,13 +100,13 @@ sync_data() {
                                         rm -rf ./data/temp
                                     fi
                                 fi
-                            } || echo "网页DAV日期备份失败"
+                            } || echo "WebDAV日期备份失败"
                         fi
                     } || {
-                        echo "网页DAV上传失败,重试..."
+                        echo "WebDAV上传失败,重试..."
                         sleep 10
                         curl -L -T "./data/webui.db" --user "$WEBDAV_USERNAME:$WEBDAV_PASSWORD" "$WEBDAV_URL/webui.db" || {
-                            echo "网页DAV重试失败"
+                            echo "WebDAV重试失败"
                         }
                     }
                 fi
