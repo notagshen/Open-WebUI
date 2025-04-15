@@ -1,3 +1,7 @@
-# Open-WebUI
-
-🤗Space Open WebUI automatic update template
+title: Openweb
+emoji: 📉
+colorFrom: indigo
+colorTo: yellow
+sdk: docker
+pinned: false
+app_port: 8080
